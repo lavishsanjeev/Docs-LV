@@ -3,8 +3,9 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { createDynamicSupabaseClient } from "@/lib/supabase";
 import crypto from "crypto";
 
-export async function GET(req: Request, { params }: { params: { token: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ token: string }> }) {
   try {
+    const params = await props.params;
     const { token } = params;
     if (!token) return new NextResponse("Invalid link", { status: 400 });
 
