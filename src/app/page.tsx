@@ -1,65 +1,112 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Show } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Shield, Upload, Database, CreditCard } from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative min-h-screen flex flex-col bg-background selection:bg-primary/20 selection:text-foreground">
+      <nav className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
+        <div className="flex items-center gap-2">
+          <Shield className="h-6 w-6 text-primary" />
+          <span className="text-xl font-heading font-semibold tracking-tight">Docs LV</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex items-center gap-3">
+          <Show when="signed-out">
+            <Link href="/sign-in">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/sign-up">
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                Get Started
+              </Button>
+            </Link>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard">
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                Dashboard
+              </Button>
+            </Link>
+          </Show>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <div className="animate-slide-up max-w-3xl">
+          <div className="mb-8 inline-flex items-center gap-2 border-b border-border pb-1 text-sm font-medium text-muted-foreground uppercase tracking-widest">
+            <Shield className="h-3 w-3" />
+            Secure &middot; Private &middot; Self-hosted
+          </div>
+          <h1 className="text-4xl font-heading font-semibold leading-tight tracking-tight md:text-5xl lg:text-7xl">
+            Your documents,{" "}
+            <span className="text-primary italic">your vault.</span>
+          </h1>
+          <p className="mx-auto mt-8 max-w-xl text-lg text-muted-foreground md:text-xl font-light">
+            Authenticate, pay once, connect your Supabase
+            backend, and manage files with absolute confidence.
+          </p>
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <Show when="signed-out">
+              <Link href="/sign-up">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 px-8 text-base">
+                  Start for ₹1
+                </Button>
+              </Link>
+              <Link href="/sign-in">
+                <Button size="lg" variant="outline" className="px-8 text-base">
+                  Sign In
+                </Button>
+              </Link>
+            </Show>
+            <Show when="signed-in">
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 px-8 text-base">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            </Show>
+          </div>
+        </div>
+
+        {/* Feature cards */}
+        <div className="mt-28 grid w-full max-w-4xl gap-8 sm:grid-cols-3 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+          {[
+            {
+              icon: CreditCard,
+              title: "One-Time Payment",
+              desc: "A singular payment to unlock lifetime access. No recurring subscriptions.",
+            },
+            {
+              icon: Database,
+              title: "BYO Supabase",
+              desc: "Connect your autonomous backend instance. We store nothing.",
+            },
+            {
+              icon: Upload,
+              title: "Universal Storage",
+              desc: "Upload complex files securely to your own partitioned storage.",
+            },
+          ].map((f) => (
+            <div
+              key={f.title}
+              className="glass rounded-xl p-8 text-left transition-transform duration-300 hover:-translate-y-1"
+            >
+              <f.icon className="mb-5 h-8 w-8 text-primary/80 stroke-[1.5]" />
+              <h3 className="mb-3 text-lg font-heading font-medium tracking-tight bg-transparent">{f.title}</h3>
+              <p className="text-sm font-light leading-relaxed text-muted-foreground">{f.desc}</p>
+            </div>
+          ))}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 py-8 text-center text-sm text-muted-foreground">
+        © {new Date().getFullYear()} Docs LV. Built with security-first mindset.
+      </footer>
     </div>
   );
 }
