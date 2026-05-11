@@ -7,7 +7,7 @@ import { FileList } from "@/components/file-list";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Files, RefreshCw, Database, Search } from "lucide-react";
+import { Files, RefreshCw, Database, Search, HardDrive } from "lucide-react";
 import Link from "next/link";
 
 interface FileItem {
@@ -68,6 +68,18 @@ export default function DashboardPage() {
     );
   }
 
+  const totalSizeBytes = files.reduce((acc, file) => acc + file.size, 0);
+  const MAX_STORAGE_BYTES = 1024 * 1024 * 1024; // 1GB limit for Free Tier
+  const storagePercentage = Math.min(100, (totalSizeBytes / MAX_STORAGE_BYTES) * 100);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -97,8 +109,30 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Storage Info */}
+      <div className="rounded-xl border border-border/50 bg-secondary/20 p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HardDrive className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-medium">Storage Usage</h2>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{formatBytes(totalSizeBytes)}</span> used of <span className="font-medium text-foreground">{formatBytes(MAX_STORAGE_BYTES)}</span>
+          </div>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div 
+            className="h-full bg-primary transition-all duration-500 ease-in-out" 
+            style={{ width: `${storagePercentage}%` }} 
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {formatBytes(Math.max(0, MAX_STORAGE_BYTES - totalSizeBytes))} remaining (assuming 1GB limit)
+        </p>
+      </div>
+
       {/* Upload area */}
-      <FileUpload onUploadComplete={fetchFiles} />
+      <FileUpload onUploadComplete={fetchFiles} existingFiles={files} />
 
       {/* File list */}
       <div className="space-y-4">

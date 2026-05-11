@@ -5,15 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Upload, Loader2, X, FileIcon } from "lucide-react";
 import { toast } from "sonner";
 
-interface FileUploadProps {
-  onUploadComplete: () => void;
+interface FileItem {
+  name: string;
 }
 
-export function FileUpload({ onUploadComplete }: FileUploadProps) {
+interface FileUploadProps {
+  onUploadComplete: () => void;
+  existingFiles: FileItem[];
+}
+
+export function FileUpload({ onUploadComplete, existingFiles }: FileUploadProps) {
   const [dragActive, setDragActive] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success">("idle");
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const checkDuplicate = (file: File) => {
+    return existingFiles.some((f) => {
+      const match = f.name.match(/^\d+_(.+)$/);
+      const displayName = match ? match[1] : f.name;
+      return displayName === file.name;
+    });
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -29,51 +43,110 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files?.[0]) {
-      setSelectedFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files?.length) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      const validFiles = newFiles.filter(f => !checkDuplicate(f));
+      
+      if (newFiles.length !== validFiles.length) {
+        toast.error(`${newFiles.length - validFiles.length} duplicate file(s) skipped.`);
+      }
+      setSelectedFiles(prev => [...prev, ...validFiles]);
     }
-  }, []);
+  }, [existingFiles]);
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files?.[0]) {
-        setSelectedFile(e.target.files[0]);
+      if (e.target.files?.length) {
+        const newFiles = Array.from(e.target.files);
+        const validFiles = newFiles.filter(f => !checkDuplicate(f));
+        
+        if (newFiles.length !== validFiles.length) {
+          toast.error(`${newFiles.length - validFiles.length} duplicate file(s) skipped.`);
+        }
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+        if (inputRef.current) inputRef.current.value = "";
       }
     },
-    []
+    [existingFiles]
   );
 
   const handleUpload = useCallback(async () => {
-    if (!selectedFile) return;
-    setUploading(true);
+    if (selectedFiles.length === 0) return;
+    setUploadStatus("uploading");
+    setUploadProgress({});
+
+    let hasError = false;
+    const uploadStart = Date.now();
+
+    // Concurrently upload all files using XHR for accurate progress
+    const uploadPromises = selectedFiles.map((file) => {
+      return new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/files/upload", true);
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            setUploadProgress(prev => ({ ...prev, [file.name]: percentComplete }));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
+            resolve();
+          } else {
+            hasError = true;
+            toast.error(`Failed to upload ${file.name}`);
+            reject(new Error(`Failed to upload ${file.name}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          hasError = true;
+          toast.error(`Network error uploading ${file.name}`);
+          reject(new Error(`Network error uploading ${file.name}`));
+        };
+
+        const formData = new FormData();
+        formData.append("file", file);
+        xhr.send(formData);
+      });
+    });
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
+      await Promise.allSettled(uploadPromises);
 
-      const res = await fetch("/api/files/upload", {
-        method: "POST",
-        body: formData,
-      });
+      if (!hasError) {
+        // Ensure progress modal is visible for at least 800ms before showing success
+        const elapsed = Date.now() - uploadStart;
+        const minProgressTime = 800;
+        if (elapsed < minProgressTime) {
+          await new Promise(r => setTimeout(r, minProgressTime - elapsed));
+        }
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
+        setUploadStatus("success");
+        // Show success animation for 2.5s
+        setTimeout(() => {
+          setUploadStatus("idle");
+          setSelectedFiles([]);
+          setUploadProgress({});
+          onUploadComplete();
+          toast.success(`Successfully uploaded ${selectedFiles.length} file(s)`);
+        }, 2500);
+      } else {
+        setUploadStatus("idle");
+        onUploadComplete();
       }
-
-      toast.success(`"${selectedFile.name}" uploaded successfully!`);
-      setSelectedFile(null);
-      if (inputRef.current) inputRef.current.value = "";
-      onUploadComplete();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Upload failed. Please try again."
-      );
-    } finally {
-      setUploading(false);
+      setUploadStatus("idle");
+      onUploadComplete();
     }
-  }, [selectedFile, onUploadComplete]);
+  }, [selectedFiles, onUploadComplete]);
+
+  const overallProgress = selectedFiles.length > 0 
+    ? Object.values(uploadProgress).reduce((acc, curr) => acc + curr, 0) / selectedFiles.length
+    : 0;
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -102,6 +175,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
         <input
           ref={inputRef}
           type="file"
+          multiple
           onChange={handleFileSelect}
           className="hidden"
           id="file-upload-input"
@@ -116,41 +190,84 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
         </p>
       </div>
 
-      {selectedFile && (
-        <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-3 animate-slide-up">
-          <FileIcon className="h-8 w-8 text-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {formatSize(selectedFile.size)}
-            </p>
+      {selectedFiles.length > 0 && (
+        <div className="rounded-xl bg-secondary/50 p-3 space-y-2 animate-slide-up">
+          <div className="flex items-center justify-between pb-2 border-b border-border/50">
+            <span className="text-sm font-medium">{selectedFiles.length} file{selectedFiles.length !== 1 && 's'} selected</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedFiles([])}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+            >
+              Clear All
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedFile(null);
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            {selectedFiles.map((file, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <FileIcon className="h-6 w-6 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatSize(file.size)}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFiles(prev => prev.filter((_, idx) => idx !== i));
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
           <Button
             onClick={(e) => {
               e.stopPropagation();
               handleUpload();
             }}
-            disabled={uploading}
-            size="sm"
-            className="bg-primary hover:bg-primary/90 shrink-0"
+            disabled={uploadStatus === "uploading"}
+            className="w-full mt-2 bg-primary hover:bg-primary/90"
           >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Upload"
-            )}
+            Upload {selectedFiles.length} file{selectedFiles.length !== 1 && 's'}
           </Button>
+        </div>
+      )}
+
+      {/* Uploading Progress Modal */}
+      {uploadStatus !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="animate-pop-in relative w-full max-w-sm rounded-3xl bg-[#111111] border border-zinc-800 p-8 shadow-2xl text-center">
+            {uploadStatus === "uploading" ? (
+              <div className="space-y-6">
+                <h3 className="text-xl font-medium text-zinc-100 font-heading">Uploading Files</h3>
+                <p className="text-sm text-zinc-400">Please wait while your files are transferred...</p>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${overallProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs font-mono text-zinc-500">
+                  {Math.round(overallProgress)}%
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center space-y-5 py-4">
+                <svg className="h-24 w-24 text-green-500" viewBox="0 0 52 52">
+                  <circle className="animate-circle" cx="26" cy="26" r="25" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <path className="animate-checkmark" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+                <h3 className="text-xl font-medium text-zinc-100 font-heading tracking-tight">Upload Complete</h3>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

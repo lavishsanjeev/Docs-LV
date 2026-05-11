@@ -1,0 +1,120 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - React
+  - Next.js App Router
+  - Tailwind CSS
+  - shadcn/ui
+  - Clerk Auth
+  - Supabase Storage
+routes:
+  - path: /dashboard
+    file: src/app/dashboard/page.tsx
+    auth_required: true
+    description: Main file vault dashboard
+  - path: /dashboard/settings
+    file: src/app/dashboard/settings/page.tsx
+    auth_required: true
+    description: Settings page to connect Supabase
+  - path: /s/[token]
+    file: src/app/s/[token]/page.tsx
+    auth_required: false
+    description: Public shared files page
+features:
+  - name: User Authentication
+    description: Login and Signup with Clerk
+    files: []
+    entry_route: /sign-in
+    user_interactions:
+      - Navigate to sign-in or sign-up
+      - Enter credentials to access the dashboard
+    api_calls: []
+    auth_required: false
+  - name: Connect Supabase
+    description: Enter Supabase URL and Anon Key in settings
+    files:
+      - src/app/dashboard/settings/page.tsx
+    entry_route: /dashboard/settings
+    user_interactions:
+      - Fill Supabase URL input
+      - Fill Supabase Anon Key input
+      - Click Save to store credentials
+    api_calls: []
+    auth_required: true
+  - name: File Upload
+    description: Upload single or multiple files to Supabase with XHR progress
+    files:
+      - src/components/file-upload.tsx
+      - src/app/api/files/upload/route.ts
+    entry_route: /dashboard
+    user_interactions:
+      - Drag and drop files or select files via dialog
+      - Click "Upload X files" button
+      - View progress bar and success animation
+    api_calls:
+      - method: POST
+        endpoint: /api/files/upload
+    auth_required: true
+  - name: File Preview
+    description: Preview files in a centered dialog
+    files:
+      - src/components/file-list.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - Click "eye" icon on a file
+      - View file content in modal
+      - Click Close or Open Fullscreen
+    api_calls: []
+    auth_required: true
+  - name: Rename File
+    description: Rename an existing file
+    files:
+      - src/components/file-list.tsx
+      - src/app/api/files/rename/route.ts
+    entry_route: /dashboard
+    user_interactions:
+      - Click edit icon on a file
+      - Enter new filename in dialog
+      - Click Rename
+    api_calls:
+      - method: POST
+        endpoint: /api/files/rename
+    auth_required: true
+  - name: Delete File
+    description: Delete files individually or in batches
+    files:
+      - src/components/file-list.tsx
+      - src/app/api/files/delete/route.ts
+    entry_route: /dashboard
+    user_interactions:
+      - Click trash icon to delete single file and confirm
+      - Select checkboxes, click floating Delete, type confirmation, and submit
+    api_calls:
+      - method: POST
+        endpoint: /api/files/delete
+    auth_required: true
+  - name: Share File
+    description: Generate secure short links for files
+    files:
+      - src/components/file-list.tsx
+      - src/app/api/files/share/route.ts
+    entry_route: /dashboard
+    user_interactions:
+      - Click share icon on a single file or batch toolbar
+      - Link is copied to clipboard
+    api_calls:
+      - method: POST
+        endpoint: /api/files/share
+    auth_required: true
+  - name: Public File Download
+    description: Public visitors can view and download shared files
+    files:
+      - src/app/s/[token]/page.tsx
+    entry_route: /s/[token]
+    user_interactions:
+      - Open short link URL
+      - Click Download button for files
+    api_calls: []
+    auth_required: false
+known_limitations: []

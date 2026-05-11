@@ -13,15 +13,18 @@ import {
   Archive,
   Eye,
   Link as LinkIcon,
+  Edit2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface FileItem {
@@ -83,6 +86,17 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
   // Batch processing state
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+  const [isBatchSharing, setIsBatchSharing] = useState(false);
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  
+  // Single delete state
+  const [fileToDelete, setFileToDelete] = useState<{path: string, name: string} | null>(null);
+
+  // Rename state
+  const [fileToRename, setFileToRename] = useState<{path: string, name: string} | null>(null);
+  const [renameInput, setRenameInput] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
 
   const toggleSelectAll = () => {
     if (selectedPaths.size === files.length) {
@@ -119,6 +133,28 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
     }
   };
 
+  const handleRename = async () => {
+    if (!fileToRename || !renameInput.trim()) return;
+    setIsRenaming(true);
+    try {
+      const res = await fetch("/api/files/rename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: fileToRename.path, newName: renameInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast.success("File renamed successfully");
+      setFileToRename(null);
+      onDeleteComplete(); // Refresh the list
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to rename file");
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
   const handleDelete = async (path: string, name: string) => {
     setDeletingPath(path);
     try {
@@ -150,26 +186,61 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
     if (selectedPaths.size === 0) return;
     setIsBatchDeleting(true);
     let successCount = 0;
+    let failCount = 0;
     
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         Array.from(selectedPaths).map(async (path) => {
           const res = await fetch("/api/files/delete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ path }),
           });
-          if (res.ok) successCount++;
+          if (!res.ok) throw new Error(`Failed to delete ${path}`);
+          return path;
         })
       );
       
-      toast.success(`Successfully deleted ${successCount} files`);
+      results.forEach((result) => {
+        if (result.status === "fulfilled") successCount++;
+        else failCount++;
+      });
+      
+      if (successCount > 0) {
+        toast.success(`Successfully deleted ${successCount} file${successCount !== 1 ? 's' : ''}`);
+      }
+      if (failCount > 0) {
+        toast.error(`Failed to delete ${failCount} file${failCount !== 1 ? 's' : ''}`);
+      }
+      
       setSelectedPaths(new Set());
-      onDeleteComplete();
     } catch (error) {
       toast.error("An error occurred during batch deletion.");
     } finally {
       setIsBatchDeleting(false);
+      onDeleteComplete();
+    }
+  };
+
+  const handleBatchShare = async () => {
+    if (selectedPaths.size === 0) return;
+    setIsBatchSharing(true);
+    try {
+      const res = await fetch("/api/files/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: Array.from(selectedPaths) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      await navigator.clipboard.writeText(data.url);
+      toast.success("Secure batch link copied to clipboard!");
+      setSelectedPaths(new Set());
+    } catch (error) {
+      toast.error("Failed to generate batch share link");
+    } finally {
+      setIsBatchSharing(false);
     }
   };
 
@@ -267,7 +338,20 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
                 variant="ghost"
                 size="icon"
                 disabled={isDeleting}
-                onClick={() => handleDelete(file.path, file.name)}
+                onClick={() => {
+                  setFileToRename({ path: file.path, name: file.name });
+                  setRenameInput(getDisplayName(file.name));
+                }}
+                className="h-8 w-8 hover:bg-secondary rounded-none"
+                title="Rename File"
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={isDeleting}
+                onClick={() => setFileToDelete({ path: file.path, name: file.name })}
                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-none"
                 title="Delete File"
               >
@@ -283,54 +367,54 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
       })}
       </div>
 
-      <Sheet open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
-        <SheetContent className="flex w-full flex-col sm:max-w-xl md:w-1/2">
+      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] xl:max-w-[75vw] w-full h-[90vh] flex flex-col p-0 overflow-hidden bg-background border-border/50 shadow-2xl">
           {previewFile && (
             <>
-              <SheetHeader>
-                <SheetTitle className="font-heading pr-8 truncate">
+              <DialogHeader className="px-6 py-4 border-b border-border/50 bg-secondary/20 shrink-0">
+                <DialogTitle className="font-heading pr-8 truncate text-xl">
                   {getDisplayName(previewFile.name)}
-                </SheetTitle>
-                <SheetDescription>
+                </DialogTitle>
+                <DialogDescription className="mt-1">
                   {formatSize(previewFile.size)} &middot; {formatDate(previewFile.createdAt)}
-                </SheetDescription>
-              </SheetHeader>
+                </DialogDescription>
+              </DialogHeader>
 
-              <div className="mt-4 flex-1 overflow-hidden rounded-md border border-border bg-secondary/10 flex flex-col items-center justify-center">
+              <div className="flex-1 overflow-auto bg-black/5 dark:bg-white/5 flex flex-col items-center justify-center p-6 relative">
                 {previewFile.type.startsWith("image/") ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={previewFile.url}
                     alt={previewFile.name}
-                    className="h-full w-full object-contain p-4"
+                    className="max-h-full max-w-full object-contain rounded-lg shadow-sm"
                   />
                 ) : previewFile.type.startsWith("video/") ? (
-                  <video src={previewFile.url} controls className="h-full w-full p-2" />
+                  <video src={previewFile.url} controls className="max-h-full max-w-full rounded-lg shadow-sm bg-black" />
                 ) : previewFile.type.startsWith("audio/") ? (
-                  <div className="flex h-full w-full items-center justify-center p-6">
-                    <audio src={previewFile.url} controls className="w-full" />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <audio src={previewFile.url} controls className="w-full max-w-md" />
                   </div>
                 ) : (
                   <iframe
                     src={previewFile.url}
-                    className="h-full w-full border-0 bg-white dark:bg-transparent"
+                    className="h-full w-full border border-border/50 bg-white rounded-lg shadow-sm"
                     title={previewFile.name}
                   />
                 )}
               </div>
 
-              <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setPreviewFile(null)}>
+              <DialogFooter className="px-6 py-4 border-t border-border/50 bg-secondary/20 shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:space-x-0">
+                <Button variant="outline" onClick={() => setPreviewFile(null)} className="w-full sm:w-auto">
                   Close
                 </Button>
-                <Button onClick={() => window.open(previewFile.url, "_blank")}>
+                <Button onClick={() => window.open(previewFile.url, "_blank")} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
                   Open Fullscreen
                 </Button>
-              </div>
+              </DialogFooter>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Floating Batch Actions Toolbar */}
       {selectedPaths.size > 0 && (
@@ -342,8 +426,22 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleBatchDelete}
-            disabled={isBatchDeleting}
+            onClick={handleBatchShare}
+            disabled={isBatchSharing || isBatchDeleting}
+            className="h-8 hover:bg-background/20 hover:text-background whitespace-nowrap"
+          >
+            {isBatchSharing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <LinkIcon className="h-4 w-4 mr-2" />
+            )}
+            Share
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowBatchDeleteConfirm(true)}
+            disabled={isBatchDeleting || isBatchSharing}
             className="h-8 hover:bg-background/20 hover:text-background whitespace-nowrap"
           >
             {isBatchDeleting ? (
@@ -355,6 +453,125 @@ export function FileList({ files, loading, onDeleteComplete }: FileListProps) {
           </Button>
         </div>
       )}
+
+      {/* Batch Delete Confirmation Dialog */}
+      <Dialog open={showBatchDeleteConfirm} onOpenChange={setShowBatchDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete {selectedPaths.size} file{selectedPaths.size === 1 ? '' : 's'}.
+              Please type <strong>delete my files</strong> to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4">
+            <div className="relative mt-2">
+              <div className="absolute inset-0 flex items-center px-3 pointer-events-none text-sm select-none overflow-hidden">
+                <span className="opacity-0">{deleteConfirmText}</span>
+                <span className="text-muted-foreground/40 transition-opacity">
+                  {"delete my files".startsWith(deleteConfirmText) 
+                    ? "delete my files".slice(deleteConfirmText.length) 
+                    : ""}
+                </span>
+              </div>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="bg-transparent relative z-10"
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowBatchDeleteConfirm(false);
+              setDeleteConfirmText("");
+            }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowBatchDeleteConfirm(false);
+                setDeleteConfirmText("");
+                handleBatchDelete();
+              }}
+              disabled={deleteConfirmText !== "delete my files"}
+            >
+              Delete Files
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Single Delete Confirmation Dialog */}
+      <Dialog open={!!fileToDelete} onOpenChange={(open) => !open && setFileToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete File</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{fileToDelete ? getDisplayName(fileToDelete.name) : ''}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setFileToDelete(null)}>
+              No, keep it
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (fileToDelete) {
+                  handleDelete(fileToDelete.path, fileToDelete.name);
+                  setFileToDelete(null);
+                }
+              }}
+            >
+              Yes, delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename File Dialog */}
+      <Dialog open={!!fileToRename} onOpenChange={(open) => !open && setFileToRename(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename File</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4">
+            <Input
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              placeholder="New file name..."
+              className="mt-2"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFileToRename(null)} disabled={isRenaming}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRename}
+              disabled={!renameInput.trim() || isRenaming}
+            >
+              {isRenaming ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Renaming...
+                </>
+              ) : (
+                "Rename"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

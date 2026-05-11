@@ -1,0 +1,816 @@
+[
+  {
+    "id": "TC001",
+    "title": "Download a shared file as a public visitor",
+    "description": "A public visitor can download a shared file from the shared link page.",
+    "category": "Public File Download",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid shared file link under /s/[token]"
+      },
+      {
+        "type": "action",
+        "description": "Click the download action for the shared file"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file download action is available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the shared file remains accessible after initiating download"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Access the dashboard after signing in",
+    "description": "A signed-in user can authenticate and reach the protected vault dashboard.",
+    "category": "User Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the vault interface is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Open a shared file as a public visitor",
+    "description": "A public visitor can open a shared link and see the shared file page without signing in.",
+    "category": "Public File Download",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid shared file link under /s/[token]"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the shared file page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file is available for public access"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Upload files into the vault",
+    "description": "A signed-in user with connected storage can upload files and see them appear in the vault.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Add one or more files to the upload area"
+      },
+      {
+        "type": "action",
+        "description": "Start the upload"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upload progress is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the newly uploaded files are displayed in the vault"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Connect Supabase credentials from settings",
+    "description": "An authenticated user can save valid Supabase credentials in settings and return to an active vault setup.",
+    "category": "Connect Supabase",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Click the settings section from the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the Supabase URL field with a valid Supabase project URL"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the Supabase Anon Key field with a valid Supabase anon key"
+      },
+      {
+        "type": "action",
+        "description": "Save the Supabase credentials"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Supabase connection is saved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the vault is ready for file management"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Open a shared file page from a valid token without signing in",
+    "description": "A public visitor can open a valid shared token and see the shared content instead of a gated view.",
+    "category": "Public File Download",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid shared file link under /s/[token]"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the shared content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a sign-in prompt is not required"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Generate and open a public share link",
+    "description": "A user can create a secure share link for a file, open it as a public visitor, and access the shared file page.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the sharing options for an uploaded file"
+      },
+      {
+        "type": "action",
+        "description": "Generate a secure share link"
+      },
+      {
+        "type": "action",
+        "description": "Open the generated public share link as a visitor"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the shared file page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the shared file can be downloaded"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Delete a single vault file",
+    "description": "This test verifies that a signed-in user can delete one file from the vault and see it removed from the list.",
+    "category": "Delete File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the delete action for a file"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file is removed from the list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Upload files with progress and completion feedback",
+    "description": "A user uploading multiple files sees progress feedback, completion feedback, and the vault updates after upload.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Add multiple files to the upload area"
+      },
+      {
+        "type": "action",
+        "description": "Start the upload"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upload progress is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a success confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the vault refreshes with the uploaded files"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Rename a vault file",
+    "description": "This test verifies that a signed-in user can rename an existing file and see the updated filename in the vault list.",
+    "category": "Rename File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the rename action for a file"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a new filename in the rename dialog"
+      },
+      {
+        "type": "action",
+        "description": "Submit the rename"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated filename appears in the file list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Generate and copy a share link for a single file",
+    "description": "A signed-in vault owner can generate a secure share link for one file and copy it successfully.",
+    "category": "Share File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the sign-in credentials with {{LOGIN_USER}} and {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Open the share action for a file in the vault"
+      },
+      {
+        "type": "action",
+        "description": "Copy the generated share link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a share link is generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the link copy confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Generate and copy a batch share link for selected files",
+    "description": "A signed-in vault owner can select multiple files, generate one secure share link for the batch, and copy it successfully.",
+    "category": "Share File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the sign-in credentials with {{LOGIN_USER}} and {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Select multiple files in the vault"
+      },
+      {
+        "type": "action",
+        "description": "Open the batch share action"
+      },
+      {
+        "type": "action",
+        "description": "Copy the generated share link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a batch share link is generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the link copy confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Delete multiple selected vault files",
+    "description": "This test verifies that a signed-in user can batch delete selected files after entering the required confirmation phrase and see the selected items removed.",
+    "category": "Delete File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select multiple files in the vault"
+      },
+      {
+        "type": "action",
+        "description": "Open the batch delete action"
+      },
+      {
+        "type": "action",
+        "description": "Type the required confirmation phrase"
+      },
+      {
+        "type": "action",
+        "description": "Submit the deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected files are removed from the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the bulk selection state is cleared"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Rename an uploaded file",
+    "description": "A user can rename an existing file and see the updated name in the vault.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the file actions for an uploaded file"
+      },
+      {
+        "type": "action",
+        "description": "Choose to rename the file"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the file name field with a new name"
+      },
+      {
+        "type": "action",
+        "description": "Save the file name change"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file is displayed with the updated name"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Select multiple files and batch delete them",
+    "description": "A user can select multiple files, confirm the batch delete action, and see the vault update.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select multiple files in the vault"
+      },
+      {
+        "type": "action",
+        "description": "Choose the batch delete action"
+      },
+      {
+        "type": "action",
+        "description": "Enter the confirmation phrase required for deletion"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the batch delete"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected files are removed from the vault"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Preview an uploaded file in the modal",
+    "description": "A user can open a file preview from the vault and inspect its contents in a modal.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the preview for an uploaded file"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a file preview modal is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file contents are visible in the preview"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Preview a vault file in a modal",
+    "description": "This test verifies that a signed-in user can open a file preview from the vault and inspect it in a modal before closing it.",
+    "category": "File Preview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open a file preview from the vault"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file content is displayed in a preview modal"
+      },
+      {
+        "type": "action",
+        "description": "Close the preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the preview modal is no longer visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Open a file preview in fullscreen",
+    "description": "This test verifies that a signed-in user can expand a file preview into fullscreen mode from the vault preview modal.",
+    "category": "File Preview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open a file preview from the vault"
+      },
+      {
+        "type": "action",
+        "description": "Launch fullscreen preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file is displayed in fullscreen preview"
+      },
+      {
+        "type": "action",
+        "description": "Close fullscreen preview"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Use fullscreen preview and return to file management",
+    "description": "A user can launch fullscreen preview from a file preview and continue managing files afterward.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the preview for an uploaded file"
+      },
+      {
+        "type": "action",
+        "description": "Launch fullscreen preview"
+      },
+      {
+        "type": "action",
+        "description": "Close fullscreen preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file management view remains available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the preview can be reopened from the vault"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Prevent renaming a file without a filename",
+    "description": "This test verifies that the rename dialog rejects an empty filename and keeps the file unchanged.",
+    "category": "Rename File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the rename action for a file"
+      },
+      {
+        "type": "action",
+        "description": "Clear the filename field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the rename"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a filename validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the file remains unchanged in the list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC021",
+    "title": "Handle an empty vault state",
+    "description": "A signed-in user with no uploaded files sees an empty vault state instead of file rows.",
+    "category": "File Upload",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty vault state is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no files are listed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC022",
+    "title": "Cancel batch delete when the confirmation phrase is missing",
+    "description": "This test verifies that batch delete is blocked until the required confirmation phrase is entered and no files are removed when it is omitted.",
+    "category": "Delete File",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select multiple files in the vault"
+      },
+      {
+        "type": "action",
+        "description": "Open the batch delete action"
+      },
+      {
+        "type": "action",
+        "description": "Leave the confirmation phrase empty"
+      },
+      {
+        "type": "action",
+        "description": "Submit the deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a confirmation phrase validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected files remain in the list"
+      }
+    ],
+    "priority": "Low"
+  }
+]

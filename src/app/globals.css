@@ -101,8 +101,39 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes checkmark-draw {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes circle-draw {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .animate-slide-up {
   animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkmark-draw 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.2s forwards;
+}
+
+.animate-circle {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: circle-draw 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .glass {

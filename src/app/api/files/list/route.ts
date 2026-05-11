@@ -43,9 +43,9 @@ export async function GET() {
       );
     }
 
-    // Filter out the .emptyFolderPlaceholder and map to base file structure
+    // Filter out the .emptyFolderPlaceholder and hidden folders like .share
     const files = (data || [])
-      .filter((f) => f.name !== ".emptyFolderPlaceholder")
+      .filter((f) => f.name !== ".emptyFolderPlaceholder" && f.name !== ".share" && !f.name.startsWith(".share/"))
       .map((f) => ({
         name: f.name,
         size: f.metadata?.size || 0,

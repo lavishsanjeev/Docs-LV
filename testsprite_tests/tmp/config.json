@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000/dashboard",
+  "loginUser": "vatslibrary@gmail.com",
+  "loginPassword": "super1359@",
+  "executionArgs": {
+    "projectName": "While Docs",
+    "projectPath": "c:\\Users\\HP-PC\\Desktop\\While Docs",
+    "testIds": [],
+    "additionalInstruction": "",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-TgJydOb3KsekiaXEBG_ZDFlJQZXIOLqnh2Y36selnI2aI44HJG6A0OzR7e3zj22YxiJ2IDROAMxZrpdh6k7gnjZKzVOja_C-tsS5W5mUSGSDi9KnaqV4wLqyRCDzr6jTGpE"
+    }
+  },
+  "serverPort": 50237
+}

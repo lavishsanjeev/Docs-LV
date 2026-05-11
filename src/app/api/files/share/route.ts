@@ -13,15 +13,19 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { path, expiresIn = 604800 } = body; // Default 7 days (60 * 60 * 24 * 7)
+    const { path, paths, expiresIn = 604800 } = body; // Default 7 days (60 * 60 * 24 * 7)
 
-    if (!path) {
-      return NextResponse.json({ error: "File path is required" }, { status: 400 });
+    const pathsToShare = paths || (path ? [path] : []);
+
+    if (pathsToShare.length === 0) {
+      return NextResponse.json({ error: "File paths are required" }, { status: 400 });
     }
     
     // Ensure user only shares their own files securely
-    if (!path.startsWith(`${userId}/`)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    for (const p of pathsToShare) {
+      if (!p.startsWith(`${userId}/`)) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     const client = await clerkClient();
@@ -38,14 +42,29 @@ export async function POST(req: Request) {
       );
     }
 
-    const secret = process.env.CLERK_SECRET_KEY?.substring(0, 32) || "fallback_secret";
-    const sig = crypto
-      .createHmac("sha256", secret)
-      .update(path)
-      .digest("hex")
-      .substring(0, 12);
+    const supabase = createDynamicSupabaseClient(supabaseUrl, supabaseAnonKey);
+
+    // Generate a random 8-character short ID
+    const shortId = Math.random().toString(36).substring(2, 10);
+    const shareFilePath = `${userId}/.share/${shortId}.json`;
+    
+    const fileContent = JSON.stringify({ paths: pathsToShare });
+    
+    // Upload the JSON file to the user's bucket
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(shareFilePath, fileContent, {
+        contentType: 'application/json',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error("Failed to upload share file:", uploadError);
+      return NextResponse.json({ error: "Failed to generate share link" }, { status: 500 });
+    }
       
-    const token = Buffer.from(`${path}::${sig}`).toString("base64url");
+    // The clean token combines userId and shortId
+    const token = `${userId}-${shortId}`;
     const shortUrl = `${new URL(req.url).origin}/s/${token}`;
 
     return NextResponse.json({ url: shortUrl });
